@@ -23,8 +23,21 @@ local Log = Apollo.GetPackage("Log-1.0").tPackage
 local GetPlayerUnitByName = GameLib.GetPlayerUnitByName
 local GetPlayerUnit = GameLib.GetPlayerUnit
 local GetUnitById = GameLib.GetUnitById
-local GetCurrentZoneMap = GameLib.GetCurrentZoneMap
+--local GetCurrentZoneMap = GameLib.GetCurrentZoneMap
 local next, pcall  = next, pcall
+
+local function GetCurrentZoneMap()
+    --Redmoon Terror on PTR returns a nil zone map, work around that by creating a zone for testing
+    local zoneMap = GameLib.GetCurrentZoneMap()
+    if zoneMap then
+        return zoneMap
+    end
+    local tMap = {}
+    tMap.continentId = 999
+    tMap.parentZoneId = 999 
+    tMap.id = 999
+    return tMap
+end
 
 ----------------------------------------------------------------------------------------------------
 -- Constants.
