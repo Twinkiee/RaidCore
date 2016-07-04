@@ -242,6 +242,7 @@ function RaidCore:GUI_init(sVersion)
     self.tSettingsListAnchorOffsets = { self.wndSettingsSubMenu:GetAnchorOffsets() }
     self.tSettingsTargetAnchorOffsets = { self.wndSettingsTarget:GetAnchorOffsets() }
     self.wndEncounters = {
+        Robomination = Apollo.LoadForm(self.xmlDoc, "ConfigForm_Robomination", self.wndEncounterTarget, self),
         PrimeEvolutionaryOperant = Apollo.LoadForm(self.xmlDoc, "ConfigForm_CoreY83", self.wndEncounterTarget, self),
         ExperimentX89 = Apollo.LoadForm(self.xmlDoc, "ConfigForm_ExperimentX89", self.wndEncounterTarget, self),
         Kuralak = Apollo.LoadForm(self.xmlDoc, "ConfigForm_Kuralak", self.wndEncounterTarget, self),
