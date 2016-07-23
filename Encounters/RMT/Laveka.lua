@@ -74,13 +74,13 @@ end
 function mod:OnUnitCreated(nId, unit, sName)
     local player = GameLib.GetPlayerUnit()
     
-    -- if sName == self.L["Laveka the Dark-Hearted"] then
-        -- core:AddUnit(unit)
-        -- core:WatchUnit(unit)
+    if sName == self.L["Laveka the Dark-Hearted"] then
+        core:AddUnit(unit)
+        core:WatchUnit(unit)
     -- elseif sName == self.L["Cannon Arm"] then
         -- core:AddLineBetweenUnits("CANNON", player:GetId(), nId, 2, "red")
         -- mod:AddTimerBar("ARMS", "Next arms", 45, nil)
     -- elseif sName == self.L["Flailing Arm"] then
         -- core:AddLineBetweenUnits("FLAIL", player:GetId(), nId, 2, "blue")
-    -- end
+    end
 end

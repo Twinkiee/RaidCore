@@ -99,9 +99,9 @@ function mod:OnUnitCreated(nId, tUnit, sName)
         mod:AddTimerBar("ORBSPAWN", "Orb Spawn", 25, nil)
         core:AddUnit(tUnit)
     elseif sName == self.L["Airlock Anchor"] then
-        core:AddLineBetweenUnits("ANCHOR" .. nId, player:GetId(), nId, 4, "Red")
+        core:AddLineBetweenUnits(nId, player:GetId(), nId, 4, "Red")
     elseif sName == self.L["star telegraph unit"] then
-        core:AddPixie(nId, 2, tUnit, nil, "Yellow", 5, 20, 0)
+        --core:AddPixie(nId, 2, tUnit, nil, "Yellow", 5, 20, 0)
     end
 end
 
@@ -109,7 +109,7 @@ function mod:OnUnitDestroyed(nId, tUnit, sName)
     if sName == self.L["Kinetic Orb"] then
         core:RemoveLineBetweenUnits("ORB" .. nId)
     elseif sName == self.L["Airlock Anchor"] then
-        core:RemoveLineBetweenUnits("ANCHOR" .. nId)
+        core:RemoveLineBetweenUnits(nId)
     end
 end
 

@@ -67,6 +67,6 @@
     <Script Name="Encounters/RMT/Shredder.lua"/>
     <Script Name="Encounters/RMT/Mordechai.lua"/>
     <Script Name="Encounters/RMT/Engineers.lua"/>
-    <Script Name="Encounters/RMT/Octog.lua"/>
+    <Script Name="Encounters/RMT/StarEater.lua"/>
     <Script Name="Encounters/RMT/Laveka.lua"/>
 </Addon>
