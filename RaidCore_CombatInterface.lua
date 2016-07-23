@@ -55,6 +55,8 @@ local CHANNEL_HANDLERS = {
 local SPELLID_BLACKLISTED = {
     [60883] = "Irradiate", -- On war class.
     [79671] = "Empower", -- On war class.
+    [41137] = "To The Pain", --Warrior class
+    [70161] = "Atomic Spear", --Warrior class
     [72651] = "Surge Focus Drain", -- On arcanero class.
     [72652] = "Surge Focus Drain", -- On arcanero class.
 }
