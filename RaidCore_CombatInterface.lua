@@ -57,6 +57,7 @@ local SPELLID_BLACKLISTED = {
     [79671] = "Empower", -- On war class.
     [41137] = "To The Pain", --Warrior class
     [70161] = "Atomic Spear", --Warrior class
+    [82748] = "Unbreakable", --Engineer class
     [72651] = "Surge Focus Drain", -- On arcanero class.
     [72652] = "Surge Focus Drain", -- On arcanero class.
 }
