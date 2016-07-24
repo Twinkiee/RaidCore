@@ -36,9 +36,11 @@ mod:RegisterDefaultSetting("LinesFlailingArms", false)
 mod:RegisterDefaultSetting("LinesCannonArms")
 mod:RegisterDefaultSetting("LinesScanningEye")
 mod:RegisterDefaultSetting("MarkSmashTarget")
+mod:RegisterDefaultSetting("MarkIncineratedPlayer")
 mod:RegisterDefaultSetting("SmashWarningSound")
 mod:RegisterDefaultSetting("BelchWarningSound")
 mod:RegisterDefaultSetting("MidphaseWarningSound")
+mod:RegisterDefaultSetting("IncinerationWarningSound")
 mod:RegisterDefaultSetting("CannonArmInterruptSound", false)
 
 ----------------------------------------------------------------------------------------------------
@@ -95,14 +97,17 @@ function mod:OnDebuffAdd(nId, nSpellId, nStack, fTimeRemaining)
             core:MarkUnit(tUnit, nil, self.L["SMASH"]) 
         end
     elseif DEBUFF__INCINERATION_LASER == nSpellId then
-        
+        if mod:GetSetting("MarkIncineratedPlayer") then
+            core:AddPicture("LASER" .. nId, nId, "Crosshair", 40, nil, nil, nil, "xkcdBrightPurple")
+        end
     end
 end
 
-
 function mod:OnDebuffRemove(nId, nSpellId)
-    if nSpellId == DEBUFF__THE_SKY_IS_FALLING then
+    if DEBUFF__THE_SKY_IS_FALLING == nSpellId then
         core:DropMark(nId)
+    elseif DEBUFF__INCINERATION_LASER == nSpellId then
+        core:RemovePicture("LASER" .. nId)
     end
 end
 
@@ -128,6 +133,8 @@ function mod:OnDatachron(sMessage)
     elseif sMessage == self.L["The Robomination erupts back into the fight!"] then
         bInMidPhase = false
         mod:AddTimerBar("ARMS", "Next arms", 45, nil)
+    elseif sMessage:find(self.L["The Robomination tries to incinerate %s"]) then
+        mod:AddMsg("INCINERATION", "Incineration!", 5, mod:GetSetting("IncinerationWarningSound") and "Inferno")
     end
 end
 
