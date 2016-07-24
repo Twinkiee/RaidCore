@@ -72,6 +72,7 @@ mod:RegisterDefaultSetting("LineBombPlayers")
 mod:RegisterDefaultSetting("LineIceTomb")
 mod:RegisterDefaultSetting("LineFlameWaves")
 mod:RegisterDefaultSetting("LineCleaveHydroflux")
+mod:RegisterDefaultSetting("AnounceChallengeFailure", false)
 -- Timers default configs.
 mod:RegisterDefaultTimerBarConfigs({
     ["TOMB"] = { sColor = "xkcdBrightLightBlue" },
@@ -98,6 +99,7 @@ local nLastIceTombTime
 local nLastBombTime
 local tFireBombPlayersList
 local tFrostBombPlayersList
+local bHasPrintedStacks
 
 ----------------------------------------------------------------------------------------------------
 -- Encounter description.
@@ -107,6 +109,7 @@ function mod:OnBossEnable()
     nLastBombTime = 0
     tFireBombPlayersList = {}
     tFrostBombPlayersList = {}
+	bHasPrintedStacks = false
     mod:AddTimerBar("BOMBS", "Next bombs", 30)
     mod:AddTimerBar("TOMB", "Next ice tomb", 26)
 end
@@ -230,6 +233,17 @@ function mod:OnDebuffUpdate(nId, nSpellId, nOldStack, nStack, fTimeRemaining)
             if tUnit == GetPlayerUnit() then
                 local sMessage = self.L["%d STACKS!"]:format(nStack)
                 mod:AddMsg("STACK", sMessage, 5, mod:GetSetting("SoundHighDebuffStacks") and "Beware")
+            end
+        end
+        if mod:GetSetting("AnounceChallengeFailure") then
+            if nStack == 14 and not bHasPrintedStacks then
+                local name = "Fire"
+                if nSpellId == DEBUFFID_DRENCHED then
+                    name = "Water"
+                end
+                local chatMessage = nStack .. " stacks " .. name .. " (" .. tUnit:GetName() .. ")"
+                ChatSystemLib.Command("/p " .. chatMessage)
+                bHasPrintedStacks = true
             end
         end
     end
