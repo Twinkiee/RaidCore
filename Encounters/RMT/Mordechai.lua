@@ -27,6 +27,14 @@ mod:RegisterEnglishLocale({
     ["ORB ON YOU!"] = "ORB ON YOU!",
 })
 
+
+mod:RegisterDefaultSetting("OrbLines")
+mod:RegisterDefaultSetting("AnchorLines")
+mod:RegisterDefaultSetting("OrbWarningSounds")
+mod:RegisterDefaultSetting("OrbCountdown")
+mod:RegisterDefaultSetting("StarsWarning")
+mod:RegisterDefaultSetting("AirlockWarningSound")
+
 ----------------------------------------------------------------------------------------------------
 -- Constants.
 ----------------------------------------------------------------------------------------------------
@@ -52,7 +60,7 @@ local airlock1Warn, airlock2Warn
 -- Encounter description.
 ----------------------------------------------------------------------------------------------------
 function mod:OnBossEnable()
-    mod:AddTimerBar("ORBSPAWN", "Orb Spawn", 25, nil)
+    mod:AddTimerBar("ORBSPAWN", "Orb Spawn", 25, mod:GetSetting("OrbCountdown"))
     airlock1Warn = false
     airlock2Warn = false
 end
@@ -64,10 +72,10 @@ function mod:OnHealthChanged(nId, nPercent, sName)
     if sName == self.L["Mordechai Redmoon"] then
         if nPercent >= 85 and nPercent <= 87 and not airlock1Warn then
             airlock1Warn = true
-            mod:AddMsg("AIRLOCKWARN", self.L["Airlock soon!"], 5, "Algalon")
+            mod:AddMsg("AIRLOCKWARN", self.L["Airlock soon!"], 5, mod:GetSetting("AirlockWarningSound") and "Algalon")
         elseif nPercent >= 60 and nPercent <= 62 and not airlock2Warn then
             airlock2Warn = true
-            mod:AddMsg("AIRLOCKWARN", self.L["Airlock soon!"], 5, "Algalon")
+            mod:AddMsg("AIRLOCKWARN", self.L["Airlock soon!"], 5, mod:GetSetting("AirlockWarningSound") and "Algalon")
         end
     end
 end
@@ -75,7 +83,7 @@ end
 function mod:OnCastStart(nId, sCastName, nCastEndTime, sName)
     if self.L["Mordechai Redmoon"] == sName then
         if self.L["Shatter Shock"] == sCastName then
-            mod:AddMsg("SHATTERSHOCK", "Stars Icoming!", 5, "Beware")
+            mod:AddMsg("SHATTERSHOCK", "Stars Icoming!", 5, mod:GetSetting("StarsWarning") and "Beware")
         end
     end
 end
@@ -83,7 +91,7 @@ end
 function mod:OnCastEnd(nId, sCastName, nCastEndTime, sName)
     if self.L["Mordechai Redmoon"] == sName then
         if self.L["Moment of Opportunity"] == sCastName then
-            mod:AddTimerBar("ORBSPAWN", "Orb Spawn", 15, nil) --15 seconds to orb after airlock MoO ends
+            mod:AddTimerBar("ORBSPAWN", "Orb Spawn", 15, mod:GetSetting("OrbCountdown")) --15 seconds to orb after airlock MoO ends
         end
     end
 end
@@ -96,10 +104,12 @@ function mod:OnUnitCreated(nId, tUnit, sName)
         core:WatchUnit(tUnit)
         nMordecaiId = nId
     elseif sName == self.L["Kinetic Orb"] then
-        mod:AddTimerBar("ORBSPAWN", "Orb Spawn", 25, nil)
+        mod:AddTimerBar("ORBSPAWN", "Orb Spawn", 25, mod:GetSetting("OrbCountdown"))
         core:AddUnit(tUnit)
     elseif sName == self.L["Airlock Anchor"] then
-        core:AddLineBetweenUnits(nId, player:GetId(), nId, 4, "Red")
+        if mod:GetSetting("AnchorLines") then
+            core:AddLineBetweenUnits(nId, player:GetId(), nId, 5, "Green")
+        end
     elseif sName == self.L["star telegraph unit"] then
         --core:AddPixie(nId, 2, tUnit, nil, "Yellow", 5, 20, 0)
     end
@@ -119,13 +129,17 @@ function mod:OnDebuffAdd(nId, nSpellId, nStack, fTimeRemaining)
     
     if DEBUFF__KINETIC_FIXATION == nSpellId then
         if tUnit == player then
-            mod:AddMsg("ORBTARGET", self.L["ORB ON YOU!"], 5, "RunAway")
-            core:AddLineBetweenUnits("ORB" .. nId, player:GetId(), nOrbId, 4, "Red")
+            mod:AddMsg("ORBTARGET", self.L["ORB ON YOU!"], 5, mod:GetSetting("OrbWarningSounds") and "RunAway")
+            if mod:GetSetting("OrbLines") then
+                core:AddLineBetweenUnits("ORB" .. nId, player:GetId(), nOrbId, 5, "Red")
+            end
         end
     elseif DEBUFF__KINETIC_LINK == nSpellId then
         if tUnit == player then
-            mod:AddMsg("SHOOTORB", self.L["Shoot the orb!"], 5, "Beware")
-            core:AddLineBetweenUnits("ORB" .. nId, player:GetId(), nOrbId, 4, "Green")
+            mod:AddMsg("SHOOTORB", self.L["Shoot the orb!"], 5, mod:GetSetting("OrbWarningSounds") and "Destruction")
+            if mod:GetSetting("OrbLines") then
+                core:AddLineBetweenUnits("ORB" .. nId, player:GetId(), nOrbId, 5, "Green")
+            end
         end
     end
 end
