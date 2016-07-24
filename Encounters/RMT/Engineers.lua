@@ -5,6 +5,7 @@
 ----------------------------------------------------------------------------------------------------
 local core = Apollo.GetPackage("Gemini:Addon-1.1").tPackage:GetAddon("RaidCore")
 local mod = core:NewEncounter("Engineers", 999, 999, 999)
+local Log = Apollo.GetPackage("Log-1.0").tPackage
 if not mod then return end
 
 mod:RegisterTrigMob("ANY", { "Head Engineer Orvulgh", "Chief Engineer Wilbargh" })
@@ -58,7 +59,8 @@ function mod:OnBossEnable()
             core:AddUnit(tFusionCoreUnit)
             core:WatchUnit(tFusionCoreUnit)
         else
-            ChatSystemLib.Command("/p combat started but no Fusion Core")
+            Log:Add("ERROR", "Combat started but no Lubricant Fusion Core")
+            mod:AddMsg("ERROR", "Missing pillars!", 20, "Alarm")
         end
         
         
@@ -68,7 +70,8 @@ function mod:OnBossEnable()
             core:AddUnit(tCoolingTurbineUnit)
             core:WatchUnit(tCoolingTurbineUnit)
         else
-            ChatSystemLib.Command("/p combat started but no Cooling Turbine")
+            Log:Add("ERROR", "Combat started but no Cooling Turbine")
+            mod:AddMsg("ERROR", "Missing pillars!", 20, "Alarm")
         end
         
         local nSparkPlugId = tPillars[self.L["Spark Plug"]]
@@ -77,7 +80,8 @@ function mod:OnBossEnable()
             core:AddUnit(tSparkPlugUnit)
             core:WatchUnit(tSparkPlugUnit)
         else
-            ChatSystemLib.Command("/p combat started but no Spark Plug")
+            Log:Add("ERROR", "Combat started but no Spark Plug")
+            mod:AddMsg("ERROR", "Missing pillars!", 20, "Alarm")
         end
         
         local nLubricantNozzleId = tPillars[self.L["Lubricant Nozzle"]]
@@ -86,7 +90,8 @@ function mod:OnBossEnable()
             core:AddUnit(tLubricantNozzleUnit)
             core:WatchUnit(tLubricantNozzleUnit)
         else
-            ChatSystemLib.Command("/p combat started but no Lubricant Nozzle")
+            Log:Add("ERROR", "Combat started but no Lubricant Nozzle")
+            mod:AddMsg("ERROR", "Missing pillars!", 20, "Alarm")
         end
     end
 end
@@ -102,10 +107,6 @@ function mod:OnUnitCreatedRaw(tUnit)
             sName == self.L["Lubricant Nozzle"] then
                 if not tPillars[sName] then
                     tPillars[sName] = tUnit:GetId();
-                    --core:AddUnit(tUnit)
-                    --core:WatchUnit(tUnit)
-                    
-                    local sName = tUnit:GetName()
                 end
         end
     end
@@ -133,18 +134,18 @@ function mod:OnUnitCreated(nId, tUnit, sName)
         core:AddPixie(nId, 2, tUnit, nil, "Yellow", 5, 15, 0)
         
      --These don't fire enter combat or created, but need to figure out how to track their HP
-    elseif sName == self.L["Fusion Core"] then
-        core:AddUnit(tUnit)
-        core:WatchUnit(tUnit)
-    elseif sName == self.L["Cooling Turbine"] then
-        core:AddUnit(tUnit)
-        core:WatchUnit(tUnit)
-    elseif sName == self.L["Spark Plug"] then
-        core:AddUnit(tUnit)
-        core:WatchUnit(tUnit)
-    elseif sName == self.L["Lubricant Nozzle"] then
-        core:AddUnit(tUnit)
-        core:WatchUnit(tUnit)
+    -- elseif sName == self.L["Fusion Core"] then
+        -- core:AddUnit(tUnit)
+        -- core:WatchUnit(tUnit)
+    -- elseif sName == self.L["Cooling Turbine"] then
+        -- core:AddUnit(tUnit)
+        -- core:WatchUnit(tUnit)
+    -- elseif sName == self.L["Spark Plug"] then
+        -- core:AddUnit(tUnit)
+        -- core:WatchUnit(tUnit)
+    -- elseif sName == self.L["Lubricant Nozzle"] then
+        -- core:AddUnit(tUnit)
+        -- core:WatchUnit(tUnit)
     end
 end
 
