@@ -148,7 +148,7 @@ function mod:OnUnitCreated(nId, unit, sName)
         core:AddUnit(unit)
         core:WatchUnit(unit)
         if mod:GetSetting("LinesCannonArms") then
-            core:AddLineBetweenUnits("CANNON", player:GetId(), nId, 5, "red")
+            core:AddLineBetweenUnits(nId, player:GetId(), nId, 5, "red")
         end
         if not bInMidPhase then
             mod:AddTimerBar("ARMS", "Next arms", 45, nil)
@@ -157,13 +157,24 @@ function mod:OnUnitCreated(nId, unit, sName)
         core:AddUnit(unit)
         core:WatchUnit(unit)
         if mod:GetSetting("LinesFlailingArms") then
-            core:AddLineBetweenUnits("FLAIL", player:GetId(), nId, 5, "blue")
+            core:AddLineBetweenUnits(nId, player:GetId(), nId, 5, "blue")
         end
     elseif sName == self.L["Scanning Eye"] then
         core:AddUnit(unit)
         core:WatchUnit(unit)
         if mode:GetSetting("LinesScanningEye") then
-            core:AddLineBetweenUnits("EYE", player:GetId(), nId, 5, "green")
+            core:AddLineBetweenUnits(nId, player:GetId(), nId, 5, "green")
         end
+    end
+end
+
+function mod:OnUnitDestroyed(nId, unit, sName)
+    if sName == self.L["Scanning Eye"] then
+        core:RemoveLineBetweenUnits(nId)
+        mod:AddTimerBar("ARMS", "Next arms", 6, nil)
+    elseif sName == self.L["Cannon Arm"] then
+        core:RemoveLineBetweenUnits(nId)
+    elseif sName == self.L["Flailing Arm"] then
+        core:RemoveLineBetweenUnits(nId)
     end
 end
