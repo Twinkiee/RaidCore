@@ -21,14 +21,15 @@ mod:RegisterEnglishLocale({
     -- Datachron messages.
     -- Cast.
     -- Bar and messages.
-    ["Shoot the orb!"] = "Shoot the orb!",
+    ["%s pillar at N%!"] = "%s pillar at 85%!"
 })
+
+mod:RegisterDefaultSetting("PillarWarningSound")
 
 ----------------------------------------------------------------------------------------------------
 -- Constants.
 ----------------------------------------------------------------------------------------------------
 local DEBUFF__ELECTROSHOCK_VULNERABILITY = 83798 --2nd shock -> death
-local DEBUFF__ATOMIC_SPEAR = 70161 --Something on Wilbaugh tank?
 local DEBUFF__OIL_SLICK = 84072 --Sliding platform debuff
 
 ----------------------------------------------------------------------------------------------------
@@ -60,7 +61,7 @@ function mod:OnBossEnable()
             core:WatchUnit(tFusionCoreUnit)
         else
             Log:Add("ERROR", "Combat started but no Lubricant Fusion Core")
-            mod:AddMsg("ERROR", "Missing pillars!", 20, "Alarm")
+            mod:AddMsg("ERROR", "Missing pillars!", 10, "Alarm")
         end
         
         
@@ -71,7 +72,7 @@ function mod:OnBossEnable()
             core:WatchUnit(tCoolingTurbineUnit)
         else
             Log:Add("ERROR", "Combat started but no Cooling Turbine")
-            mod:AddMsg("ERROR", "Missing pillars!", 20, "Alarm")
+            mod:AddMsg("ERROR", "Missing pillars!", 10, "Alarm")
         end
         
         local nSparkPlugId = tPillars[self.L["Spark Plug"]]
@@ -81,7 +82,7 @@ function mod:OnBossEnable()
             core:WatchUnit(tSparkPlugUnit)
         else
             Log:Add("ERROR", "Combat started but no Spark Plug")
-            mod:AddMsg("ERROR", "Missing pillars!", 20, "Alarm")
+            mod:AddMsg("ERROR", "Missing pillars!", 10, "Alarm")
         end
         
         local nLubricantNozzleId = tPillars[self.L["Lubricant Nozzle"]]
@@ -91,7 +92,7 @@ function mod:OnBossEnable()
             core:WatchUnit(tLubricantNozzleUnit)
         else
             Log:Add("ERROR", "Combat started but no Lubricant Nozzle")
-            mod:AddMsg("ERROR", "Missing pillars!", 20, "Alarm")
+            mod:AddMsg("ERROR", "Missing pillars!", 10, "Alarm")
         end
     end
 end
@@ -105,13 +106,27 @@ function mod:OnUnitCreatedRaw(tUnit)
             sName == self.L["Cooling Turbine"] or
             sName == self.L["Spark Plug"] or
             sName == self.L["Lubricant Nozzle"] then
-                if not tPillars[sName] then
-                    tPillars[sName] = tUnit:GetId();
-                end
+                tPillars[sName] = {id = tUnit:GetId()}
         end
     end
 end
 
+function mod:OnHealthChanged(nId, nPercent, sName)
+    if sName == self.L["Fusion Core"] or
+        sName == self.L["Cooling Turbine"] or
+        sName == self.L["Spark Plug"] or
+        sName == self.L["Lubricant Nozzle"] then
+            if nPercent >= 85 and not tPillars[sName].warning then
+                local player = GameLib.GetPlayerUnit()
+                tPillars[sName].warning = true
+                mod:AddMsg("PILLARWARN", self.L["%s pillar at N%!"]:format(sName), 5, mod:GetSetting("PillarWarningSound") and "Destruction")
+                core:AddLineBetweenUnits(nId, player:GetId(), nId, 5, "red")
+            elseif nPercent <= 80 then
+                tPillars[sName].warning = false
+                core:RemoveLineBetweenUnits(nId)
+            end
+    end
+end
 
 function mod:OnCastStart(nId, sCastName, nCastEndTime, sName)
     --if self.L["Robomination"] == sName then
