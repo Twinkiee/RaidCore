@@ -4,7 +4,7 @@
 -- Copyright (C) 2016 Joshua Shaffer
 ----------------------------------------------------------------------------------------------------
 local core = Apollo.GetPackage("Gemini:Addon-1.1").tPackage:GetAddon("RaidCore")
-local mod = core:NewEncounter("Robomination", 999, 999, 999)
+local mod = core:NewEncounter("Robomination", {999, 104}, {999, 548}, {999, 551})
 if not mod then return end
 
 mod:RegisterTrigMob("ANY", { "Robomination" })
@@ -23,7 +23,7 @@ mod:RegisterEnglishLocale({
     -- Cast.
 	["Noxious Belch"] = "Noxious Belch",
     ["Incineration Laser"] = "Incineration Laser",
-    ["Cannon Blast"] = "Cannon Blast",
+    ["Cannon Fire"] = "Cannon Fire",
     -- Bar and messages.
     ["SMASH"] = "SMASH",
 	["SMASH ON YOU"] = "SMASH ON YOU",
@@ -56,7 +56,7 @@ local DEBUFF__DISCHARGE = 84304 --Something the eye casts during mid phase maybe
 ----------------------------------------------------------------------------------------------------
 -- Locals.
 ----------------------------------------------------------------------------------------------------
-local bMidPhase1
+local bMidPhase1Warning, bMidPhase2Warning
 
 local bInMidPhase
 
@@ -64,19 +64,20 @@ local bInMidPhase
 -- Encounter description.
 ----------------------------------------------------------------------------------------------------
 function mod:OnBossEnable()
-    bMidPhase1 = false
+    bMidPhase1Warning = false
+    bMidPhase2Warning = false
     bInMidPhase = false
 	mod:AddTimerBar("ARMS", "Next arms", 45, nil)
 end
 
 function mod:OnHealthChanged(nId, nPercent, sName)
-    if sName == self.L["Star-Eater the Voracious"] then
-        if nPercent >= 75 and nPercent <= 77 and not bMidPhase1 then
-            bMidPhase1 = true
+    if sName == self.L["Robomination"] then
+        if nPercent >= 75 and nPercent <= 77 and not bMidPhase1Warning then
+            bMidPhase1Warning = true
             mod:AddMsg("MIDPHASEWARNING", self.L["Midphase soon!"], 5, mod:GetSetting("MidphaseWarningSound") and "Algalon")
-        -- elseif nPercent >= 35 and nPercent <= 37 and not bShard2Warning then
-            -- bShard2Warning = true
-            -- mod:AddMsg("SHARDWARNING", self.L["Shard phase soon!"], 5, mod:GetSetting("MidphaseWarningSound") and "Algalon")
+        elseif nPercent >= 50 and nPercent <= 57 and not bMidPhase2Warning then
+            bMidPhase2Warning = true
+            mod:AddMsg("MIDPHASEWARNING", self.L["Midphase soon!"], 5, mod:GetSetting("MidphaseWarningSound") and "Algalon")
         end
     end
 end
@@ -87,14 +88,14 @@ function mod:OnDebuffAdd(nId, nSpellId, nStack, fTimeRemaining)
     if DEBUFF__THE_SKY_IS_FALLING == nSpellId then
         if tUnit == player then
             mod:AddMsg("SMASH", "SMASH ON YOU!", 5, mod:GetSetting("SmashWarningSound") and "RunAway")
-        elseif mod:GetDistanceBetweenUnits(player, tUnit) < 8 then
+        elseif mod:GetDistanceBetweenUnits(player, tUnit) < 10 then
             mod:AddMsg("SMASH", self.L["SMASH NEAR YOU"]:format(sName), 5, mod:GetSetting("SmashWarningSound") and "Info")
         else
             local sName = tUnit:GetName()
             mod:AddMsg("SMASH", self.L["SMASH ON %s!"]:format(sName), 5, mod:GetSetting("SmashWarningSound") and "Info")
         end
         if mod:GetSetting("MarkSmashTarget") then
-            core:MarkUnit(tUnit, nil, self.L["SMASH"]) 
+            core:AddPicture(nId, nId, "Crosshair", 40, nil, nil, nil, "red")
         end
     elseif DEBUFF__INCINERATION_LASER == nSpellId then
         if mod:GetSetting("MarkIncineratedPlayer") then
@@ -105,7 +106,7 @@ end
 
 function mod:OnDebuffRemove(nId, nSpellId)
     if DEBUFF__THE_SKY_IS_FALLING == nSpellId then
-        core:DropMark(nId)
+        core:RemovePicture(nId)
     elseif DEBUFF__INCINERATION_LASER == nSpellId then
         core:RemovePicture("LASER" .. nId)
     end
@@ -119,8 +120,8 @@ function mod:OnCastStart(nId, sCastName, nCastEndTime, sName)
             --self:AddPolygon("PLAYER_BELCH", GameLib.GetPlayerUnit():GetPosition(), 8, 0, 3, "xkcdBrightPurple", 16)
         end
     elseif self.L["Cannon Arm"] == sName then
-        if self.L["Cannon Blast"] == sCastName then
-            mod:AddMsg("CANNONBLAST", "Interrupt!", 5, mod:GetSetting("CannonArmInterruptSound") and "Alert")
+        if self.L["Cannon Fire"] == sCastName then
+            mod:AddMsg("CANNONBLAST", "Interrupt!", 2, mod:GetSetting("CannonArmInterruptSound") and "Alert")
         end
     end
 end
