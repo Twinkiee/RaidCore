@@ -12,32 +12,41 @@ mod:RegisterTrigMob("ANY", { "Swabbie Ski'Li" })
 mod:RegisterEnglishLocale({
     -- Unit names.
     ["Swabbie Ski'Li"] = "Swabbie Ski'Li",
+    ["Regor the Rancid"] = "Regor the Rancid",
 	["Risen Redmoon Cadet"] = "Risen Redmoon Cadet",
 	["Risen Redmoon Plunderer"] = "Risen Redmoon Plunderer",
     ["Noxious Nabber"] = "Noxious Nabber",
     ["Putrid Pouncer"] = "Putrid Pouncer",
     ["Risen Redmoon Grunt"] = "Risen Redmoon Grunt",
-    ["Risen Redmoon Grunt"] = "Risen Redmoon Grunt",
     ["Bilious Brute"] = "Bilious Brute",
     ["Sawblade"] = "Sawblade",
     ["Saw"] = "Saw",
+    ["Tether Anchor"] = "Tether Anchor",
+    ["Hostile Invisible Unit for Fields (1.2 hit radius)"] = "Hostile Invisible Unit for Fields (1.2 hit radius)" --Bubble AoE?
     -- Datachron messages.
     ["WARNING: THE SHREDDER IS STARTING!"] = "WARNING: THE SHREDDER IS STARTING!",
     -- NPC Say
     ["Into the shredder with ye!"] = "Into the shredder with ye!", --Shredder is active!
     ["Ye've jammed me shredder"] = "Ye've jammed me shredder, ye have! Blast ye filthy bilge slanks!",
-    ["The shredder'll take care o' ye"] = "The shredder'll take care o' ye once and fer all!", --Wipe
+    ["The shredder'll take care o' ye"] = "The shredder'll take care o' ye once and fer all!", --Wipe incoming
     -- Cast.
     ["Risen Repellent"] = "Risen Repellent",
     ["Scrubber Bubbles"] = "Scrubber Bubbles",
     ["Clean Sweep"] = "Clean Sweep", --Resets swabbie to starting position after shredder jams
     ["Swabbie Swoop"] = "Swabbie Swoop", --Swabbie's ovement ability at start of fight
-    ["Necrotic Lash"] = "Necrotic Lash", --Cast by Noxious Nabber (grab and disorient)
+    ["Necrotic Lash"] = "Necrotic Lash", --Cast by Noxious Nabber (grab and disorient), interruptable
+    ["Deathwail"] = "Deathwail", --Miniboss knockdown, interruptable
+    ["Bilerush"] = "Bilerush",
     -- Bar and messages.
 })
 
 mod:RegisterDefaultSetting("MarkSpawnLocations")
 mod:RegisterDefaultSetting("SpawnWarningSound")
+mod:RegisterDefaultSetting("DrawSawbladeSafeLines")
+mod:RegisterDefaultSetting("DrawLargeSawLines")
+mod:RegisterDefaultSetting("PrintSwabbieSpeed")
+mod:RegisterDefaultSetting("SoundLashInterrupt")
+mod:RegisterDefaultSetting("SoundDeathwailInterrupt")
 
 --Wave 1 A: Risen Redmoon Grunt x1, Risen Redmoon Cadet x2, Putrid Pouncer x1
 --Wave 1 B: Risen Redmoon Grunt x2, Risen Redmoon Cadet x2, Risen Redmoon Plunderer x1
@@ -63,12 +72,13 @@ mod:RegisterDefaultSetting("SpawnWarningSound")
 ----------------------------------------------------------------------------------------------------
 local DEBUFF__SCRUBBER_BUBBLES = 77715 --Debuff while launched into the air
 local DEBUFF__NECROTIC_OOZE = 84317 --Disorient
-local DEBUFF__JUNK_TRAP = 86752 --
+local DEBUFF__JUNK_TRAP = 86752 --Tether debuff
+local DEBUFF__OOZING_BILE = 84321 --Increased damage taken, stacks. Applied by billious brute
 local BUFF__DETERMINED_STRIDE = 85567 --Swabbie is immune to CC (during walk back)
 local BUFF__RISEN_REPELLENT = 85488 --Swabbie will cast AoE knockback if he gets too close to risen
 local BUFF__RISEN = 77841 --Add can't die (needs knocked up into shredder)
 
-local SPAWN_TRIGGER_DISTANCE = 20 --How close Swabbie has to get to trigger a spawn warning
+local SPAWN_TRIGGER_DISTANCE = 12 --How close Swabbie has to get to trigger a spawn warning
 
 local DECK_Y_LOC = 598
 local SPAWN_1_TRIGGER = Vector3.New(-20, DECK_Y_LOC, -827)
@@ -83,6 +93,11 @@ local SPAWN_3_LOCATION_B = Vector3.New(-20, DECK_Y_LOC, -882)
 local MINI_SPAWN_TIGGER = Vector3.New(-20.5, DECK_Y_LOC, -973)
 local MINI_SPAWN_LOCATION = Vector3.New(-20.5, DECK_Y_LOC, -807)
 
+local ENTRANCELINE_A = Vector3.New(-1, DECK_Y_LOC, -830)
+local ENTRANCELINE_B = Vector3.New(-40, DECK_Y_LOC, -830)
+local SHREDDERLINE_A = Vector3.New(-1, DECK_Y_LOC, -980)
+local SHREDDERLINE_B = Vector3.New(-41, DECK_Y_LOC, -980)
+
 ----------------------------------------------------------------------------------------------------
 -- Locals.
 ----------------------------------------------------------------------------------------------------
@@ -91,6 +106,8 @@ local bWave1Warning, bWave2Warning, bWave3Warning, bMini1Warning, bWave4Warning,
 local bWalkingPhase, bWipeWarning
 local tPositionCheckTimer
 local nSwabbieSkiLiId
+
+local lastPos, speedCheckTimer
 
 ----------------------------------------------------------------------------------------------------
 -- Encounter description.
@@ -123,6 +140,14 @@ function mod:OnBossEnable()
     bWipeWarning = false
     
     tPositionCheckTimer = ApolloTimer.Create(.2, true, "OnPositionCheckTimer", mod)
+    if mod:GetSetting("PrintSwabbieSpeed") then
+        speedCheckTimer = ApolloTimer.Create(3, true, "SpeedCheckTimer", mod)
+    end
+    
+    if mod:GetSetting("DrawSawbladeSafeLines") then
+        core:AddLineBetweenUnits("ShredderSawLine", SHREDDERLINE_A, SHREDDERLINE_B, 5, "xkcdBrightPurple")
+        core:AddLineBetweenUnits("EntranceSawLine", ENTRANCELINE_A, ENTRANCELINE_B, 5, "xkcdBrightPurple")
+    end
 end
 
 function mod:OnBossDisable()
@@ -130,17 +155,46 @@ function mod:OnBossDisable()
         tPositionCheckTimer:Stop()
         tPositionCheckTimer = nil
     end
+    if speedCheckTimer then
+        speedCheckTimer:Stop()
+        speedCheckTimer = nil
+    end
+    core:RemoveLineBetweenUnits("ShredderSawLine")
+    core:RemoveLineBetweenUnits("EntranceSawLine")
 end
 
 function mod:OnDebuffAdd(nId, nSpellId, nStack, fTimeRemaining)
 end
 
+function mod:SpeedCheckTimer()
+    local swabbie = GameLib.GetUnitById(nSwabbieSkiLiId)
+    local currentPos = Vector3.New(swabbie:GetPosition())
+    if lastPos
+        if not bWalkingPhase then
+            local distance = (currentPos - lastPos):Length()
+            if distance > .5 and distance < 20 then
+                core:Print("Distance in 3s: " .. distance)
+            end
+        end
+    end
+    lastPos = currentPos
+end
+
 function mod:OnCastStart(nId, sCastName, nCastEndTime, sName)
-    --if self.L["Robomination"] == sName then
-    --    if self.L["Noxious Belch"] == sCastName then
-    --        mod:AddMsg("BELCH", "Noxious Belch", 5, "Beware")
-    --    end
-    --end
+    if self.L["Noxious Nabber"] == sName then
+        if self.L["Necrotic Lash"] == sCastName then
+            local uUnit = GameLib.GetUnitById(nId)
+            local player = GameLib.GetPlayerUnit()
+            local playerPos = Vector3.New(player:GetPosition())
+            if mod:DistanceBetween(uUnit, playerPos) < 20 then
+                mod:AddMsg("LASH", "Interrupt Lash!", 5, mod:GetSetting("SoundLashInterrupt") and "Destruction")
+            end
+        end
+    elseif self.L["Regor the Rancid"] == sName then
+        if self.L["Deathwail"] == sCastName then
+            mod:AddMsg("DEATHWAIL", "Interrupt Deathwail!", 5, mod:GetSetting("SoundDeathwailInterrupt") and "Destruction")
+        end
+    end
 end
 
 function mod:OnUnitCreated(nId, unit, sName)
@@ -158,45 +212,36 @@ function mod:OnUnitCreated(nId, unit, sName)
             mod:PrintUnitPos(nSwabbieSkiLiId)
             core:RemovePicture("SPAWNA")
             core:RemovePicture("SPAWNB")
-            Log:Add("ChannelCommStatus", "Wave 2")
         elseif bWave4Spawned and not bWave5Spawned then
             bWave5Spawned = true
             mod:PrintUnitPos(nSwabbieSkiLiId)
             core:RemovePicture("SPAWNA")
             core:RemovePicture("SPAWNB")
-            Log:Add("ChannelCommStatus", "Wave 5") 
         elseif bWave5Spawned and not bWave6Spawned then
             bWave6Spawned = true
             mod:PrintUnitPos(nSwabbieSkiLiId)
             core:RemovePicture("SPAWNA")
             core:RemovePicture("SPAWNB")
-            Log:Add("ChannelCommStatus", "Wave 6")
         end
     elseif sName == self.L["Risen Redmoon Plunderer"] then
         mod:PrintUnitPos(nId)
-        core:WatchUnit(unit)
         if not bWave1Spawned then
             bWave1Spawned = true
             mod:PrintUnitPos(nSwabbieSkiLiId)
             core:RemovePicture("SPAWNA")
             core:RemovePicture("SPAWNB")
-            Log:Add("ChannelCommStatus", "Wave 1")
         end
     elseif sName == self.L["Putrid Pouncer"] then
         mod:PrintUnitPos(nId)
-        core:WatchUnit(unit)
     elseif sName == self.L["Risen Redmoon Grunt"] then
         mod:PrintUnitPos(nId)
-        core:WatchUnit(unit)
     elseif sName == self.L["Risen Redmoon Cadet"] then
         mod:PrintUnitPos(nId)
-        core:WatchUnit(unit)
         if bWave2Spawned and not bWave3Spawned then
             bWave3Spawned = true
             mod:PrintUnitPos(nSwabbieSkiLiId)
             core:RemovePicture("SPAWNA")
             core:RemovePicture("SPAWNB")
-            Log:Add("ChannelCommStatus", "Wave 3")
         end
     elseif sName == self.L["Bilious Brute"] then
         mod:PrintUnitPos(nId)
@@ -206,19 +251,16 @@ function mod:OnUnitCreated(nId, unit, sName)
             mod:PrintUnitPos(nSwabbieSkiLiId)
             core:RemovePicture("SPAWNA")
             core:RemovePicture("SPAWNB")
-            Log:Add("ChannelCommStatus", "Wave 4")
         elseif bMini2Spawned and not bWave7Spawned then
             bWave7Spawned = true
             mod:PrintUnitPos(nSwabbieSkiLiId)
             core:RemovePicture("SPAWNA")
             core:RemovePicture("SPAWNB")
-            Log:Add("ChannelCommStatus", "Wave 7")
         elseif bWave7Spawned and not bWave8Spawned then
             bWave8Spawned = true
             mod:PrintUnitPos(nSwabbieSkiLiId)
             core:RemovePicture("SPAWNA")
             core:RemovePicture("SPAWNB")
-            Log:Add("ChannelCommStatus", "Wave 8")
         end
     elseif sName == self.L["Regor the Rancid"] then
         core:AddUnit(unit)
@@ -228,13 +270,21 @@ function mod:OnUnitCreated(nId, unit, sName)
             bMini1Spawned = true
             mod:PrintUnitPos(nSwabbieSkiLiId)
             core:RemovePicture("MINISPAWN")
-            Log:Add("ChannelCommStatus", "Miniboss 1")
         elseif not bMini2Spawned then
             bMini2Spawned = true
             mod:PrintUnitPos(nSwabbieSkiLiId)
             core:RemovePicture("MINISPAWN")
-            Log:Add("ChannelCommStatus", "Miniboss 2")
         end
+    elseif sName == self.L["Sawblade"] then
+        if mod:GetSetting("DrawLargeSawLines") then
+            core:AddPixie(nId, 2, unit, nil, "xkcdBrightPurple", 15, 60, 0)
+        end
+    end
+end
+
+function mod:OnUnitDestroyed(nId, unit, sName)
+    if sName == self.L["Sawblade"] then
+        core:DropPixie(nId)
     end
 end
 
