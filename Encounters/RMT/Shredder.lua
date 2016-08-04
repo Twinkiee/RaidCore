@@ -22,7 +22,7 @@ mod:RegisterEnglishLocale({
     ["Sawblade"] = "Sawblade",
     ["Saw"] = "Saw",
     ["Tether Anchor"] = "Tether Anchor",
-    ["Hostile Invisible Unit for Fields (1.2 hit radius)"] = "Hostile Invisible Unit for Fields (1.2 hit radius)" --Bubble AoE?
+    ["Hostile Invisible Unit for Fields (1.2 hit radius)"] = "Hostile Invisible Unit for Fields (1.2 hit radius)", --Bubble AoE?
     -- Datachron messages.
     ["WARNING: THE SHREDDER IS STARTING!"] = "WARNING: THE SHREDDER IS STARTING!",
     -- NPC Say
@@ -79,6 +79,7 @@ local BUFF__RISEN_REPELLENT = 85488 --Swabbie will cast AoE knockback if he gets
 local BUFF__RISEN = 77841 --Add can't die (needs knocked up into shredder)
 
 local SPAWN_TRIGGER_DISTANCE = 12 --How close Swabbie has to get to trigger a spawn warning
+local SPEED_CHECK_TIME = 3
 
 local DECK_Y_LOC = 598
 local SPAWN_1_TRIGGER = Vector3.New(-20, DECK_Y_LOC, -827)
@@ -141,7 +142,7 @@ function mod:OnBossEnable()
     
     tPositionCheckTimer = ApolloTimer.Create(.2, true, "OnPositionCheckTimer", mod)
     if mod:GetSetting("PrintSwabbieSpeed") then
-        speedCheckTimer = ApolloTimer.Create(3, true, "SpeedCheckTimer", mod)
+        speedCheckTimer = ApolloTimer.Create(SPEED_CHECK_TIME, true, "SpeedCheckTimer", mod)
     end
     
     if mod:GetSetting("DrawSawbladeSafeLines") then
@@ -169,11 +170,11 @@ end
 function mod:SpeedCheckTimer()
     local swabbie = GameLib.GetUnitById(nSwabbieSkiLiId)
     local currentPos = Vector3.New(swabbie:GetPosition())
-    if lastPos
+    if lastPos then
         if not bWalkingPhase then
-            local distance = (currentPos - lastPos):Length()
-            if distance > .5 and distance < 20 then
-                core:Print("Distance in 3s: " .. distance)
+            local speed = (currentPos - lastPos):Length() / SPEED_CHECK_TIME
+            if speed > .1 and speed < 10 then
+                core:Print(string.format("Swabbie Speed: %.2f", speed))
             end
         end
     end
