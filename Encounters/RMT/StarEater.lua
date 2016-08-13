@@ -4,7 +4,7 @@
 -- Copyright (C) 2016 Joshua Shaffer
 ----------------------------------------------------------------------------------------------------
 local core = Apollo.GetPackage("Gemini:Addon-1.1").tPackage:GetAddon("RaidCore")
-local mod = core:NewEncounter("StarEater", 999, 999, 999)
+local mod = core:NewEncounter("StarEater", 104, 0, 548)
 if not mod then return end
 
 mod:RegisterTrigMob("ANY", { "Star-Eater the Voracious" })
@@ -189,25 +189,39 @@ end
 
 function mod:CheckShardsTimer()
     local playerUnit = GameLib.GetPlayerUnit()
-    local playerPosition = playerUnit:GetPosition()
+    local playerPosition = Vector3.New(playerUnit:GetPosition())
     
     for nId, hasLine in pairs(tShardIds) do
         local unit = GameLib.GetUnitById(nId)
         if unit then
-            local shardPosition = unit:GetPosition()
-            local isClose = mod:HorizontalDistanceClose(playerPosition, shardPosition)
+            local shardPosition = Vector3.New(unit:GetPosition())
+            local horizontalDistance = mod:HorizontalDistance(playerPosition, shardPosition)
+            local isClose = horizontalDistance < 18
             if shardPosition.y + 5 < playerPosition.y then
-                -- Dno't draw lines to shards far below than player
+                -- Don't draw lines to shards far below than player
                 core:RemoveLineBetweenUnits(nId)
                 tShardIds[nId] = false
             elseif isClose and shardPosition.y < (playerPosition.y + ROCKET_HEIGHT + 2) then
+                -- Draw lines to shards player can reach with rocket boost
                 if not hasLine then
-                    -- Can reach the shard with a boost
+                    local lineThickness = 4 --Thicker lines for closer shards?
+                    if horizontalDistance < 5 then
+                        lineThickness = 6
+                    elseif horizontalDistance > 12 then
+                        lineThickness = 2
+                    end
                     local color = "red"
                     if shardPosition.y > ROOM_FLOOR_Y + 40 then
-                        color = "green"
+                        color = "green" --Orange shards are 40m+ up from floor
                     end
-                    core:AddLineBetweenUnits(nId, playerUnit:GetId(), nId, 3, color)
+                    if false then
+                        --Verticle lines from shards, rather than to player?
+                        local belowShardPos = Vector3.New(shardPosition)
+                        belowShardPos.y = belowShardPos.y - 42
+                        core:AddLineBetweenUnits(nId, shardPosition, belowShardPos, lineThickness, color)
+                    else
+                        core:AddLineBetweenUnits(nId, playerUnit:GetId(), nId, lineThickness, color)
+                    end
                     tShardIds[nId] = true
                 end
             else
@@ -221,8 +235,8 @@ function mod:CheckShardsTimer()
     end
 end
 
-function mod:HorizontalDistanceClose(pos1, pos2)
-    return math.sqrt((pos1.x - pos2.x)^2 + (pos1.z - pos2.z)^2) < 18
+function mod:HorizontalDistance(pos1, pos2)
+    return (Vector2.New(pos1.x, pos1.z) - Vector2.New(pos2.x, pos2.z)):Length()
 end
 
 function mod:OnBuffAdd(nId, nSpellId, nStack, fTimeRemaining)

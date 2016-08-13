@@ -4,7 +4,7 @@
 -- Copyright (C) 2016 Joshua Shaffer
 ----------------------------------------------------------------------------------------------------
 local core = Apollo.GetPackage("Gemini:Addon-1.1").tPackage:GetAddon("RaidCore")
-local mod = core:NewEncounter("Engineers", 999, 999, 999)
+local mod = core:NewEncounter("Engineers", 104, 548, 552)
 local Log = Apollo.GetPackage("Log-1.0").tPackage
 if not mod then return end
 
@@ -54,7 +54,7 @@ function mod:OnBossEnable()
     
     --These don't fire combat start (or combat logs in general?) so we have to do this the hard way with UnitCreated
     if tPillars then
-        local nFusionCoreId = tPillars[self.L["Fusion Core"]]
+        local nFusionCoreId = tPillars[self.L["Fusion Core"]].id
         local tFusionCoreUnit = GameLib.GetUnitById(nFusionCoreId)
         if tFusionCoreUnit then
             core:AddUnit(tFusionCoreUnit)
@@ -65,7 +65,7 @@ function mod:OnBossEnable()
         end
         
         
-        local nCollingTurbineId = tPillars[self.L["Cooling Turbine"]]
+        local nCollingTurbineId = tPillars[self.L["Cooling Turbine"]].id
         local tCoolingTurbineUnit = GameLib.GetUnitById(nCollingTurbineId)
         if tCoolingTurbineUnit then
             core:AddUnit(tCoolingTurbineUnit)
@@ -75,7 +75,7 @@ function mod:OnBossEnable()
             mod:AddMsg("ERROR", "Missing pillars!", 10, "Alarm")
         end
         
-        local nSparkPlugId = tPillars[self.L["Spark Plug"]]
+        local nSparkPlugId = tPillars[self.L["Spark Plug"]].id
         local tSparkPlugUnit = GameLib.GetUnitById(nSparkPlugId)
         if tSparkPlugUnit then
             core:AddUnit(tSparkPlugUnit)
@@ -85,7 +85,7 @@ function mod:OnBossEnable()
             mod:AddMsg("ERROR", "Missing pillars!", 10, "Alarm")
         end
         
-        local nLubricantNozzleId = tPillars[self.L["Lubricant Nozzle"]]
+        local nLubricantNozzleId = tPillars[self.L["Lubricant Nozzle"]].id
         local tLubricantNozzleUnit = GameLib.GetUnitById(nLubricantNozzleId)
         if tLubricantNozzleUnit then
             core:AddUnit(tLubricantNozzleUnit)

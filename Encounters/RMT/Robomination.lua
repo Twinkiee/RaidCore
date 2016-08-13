@@ -4,7 +4,7 @@
 -- Copyright (C) 2016 Joshua Shaffer
 ----------------------------------------------------------------------------------------------------
 local core = Apollo.GetPackage("Gemini:Addon-1.1").tPackage:GetAddon("RaidCore")
-local mod = core:NewEncounter("Robomination", {999, 104}, {999, 548}, {999, 551})
+local mod = core:NewEncounter("Robomination", {104, 104}, {0, 548}, {548, 551})
 if not mod then return end
 
 mod:RegisterTrigMob("ANY", { "Robomination" })

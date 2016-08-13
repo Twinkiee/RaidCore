@@ -4,7 +4,7 @@
 -- Copyright (C) 2016 Joshua Shaffer
 ----------------------------------------------------------------------------------------------------
 local core = Apollo.GetPackage("Gemini:Addon-1.1").tPackage:GetAddon("RaidCore")
-local mod = core:NewEncounter("Mordecai", 999, 999, 999)
+local mod = core:NewEncounter("Mordecai", 104, 0, 548)
 if not mod then return end
 
 mod:RegisterTrigMob("ANY", { "Mordechai Redmoon" })
