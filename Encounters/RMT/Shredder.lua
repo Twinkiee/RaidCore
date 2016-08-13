@@ -4,7 +4,7 @@
 -- Copyright (C) 2016 Joshua Shaffer
 ----------------------------------------------------------------------------------------------------
 local core = Apollo.GetPackage("Gemini:Addon-1.1").tPackage:GetAddon("RaidCore")
-local mod = core:NewEncounter("Shredder", 999, 999, 999)
+local mod = core:NewEncounter("Shredder", 104, 548, 550)
 local Log = Apollo.GetPackage("Log-1.0").tPackage
 if not mod then return end
 
@@ -22,7 +22,7 @@ mod:RegisterEnglishLocale({
     ["Sawblade"] = "Sawblade",
     ["Saw"] = "Saw",
     ["Tether Anchor"] = "Tether Anchor",
-    ["Hostile Invisible Unit for Fields (1.2 hit radius)"] = "Hostile Invisible Unit for Fields (1.2 hit radius)", --Bubble AoE?
+    ["Circle Telegraph"] = "Hostile Invisible Unit for Fields (1.2 hit radius)", --Bubble AoE?
     -- Datachron messages.
     ["WARNING: THE SHREDDER IS STARTING!"] = "WARNING: THE SHREDDER IS STARTING!",
     -- NPC Say
@@ -36,8 +36,14 @@ mod:RegisterEnglishLocale({
     ["Swabbie Swoop"] = "Swabbie Swoop", --Swabbie's ovement ability at start of fight
     ["Necrotic Lash"] = "Necrotic Lash", --Cast by Noxious Nabber (grab and disorient), interruptable
     ["Deathwail"] = "Deathwail", --Miniboss knockdown, interruptable
+    ["Gravedigger"] = "Gravedigger", --Miniboss cast?
     ["Bilerush"] = "Bilerush",
     -- Bar and messages.
+    ["%s 10 BILE STACKS!"] = "%s 10 BILE STACKS!",
+    ["Swabbie Speed: %.2f"] = "Swabbie Speed: %.2f",
+    ["%d BILE STACKS!"] = "%d BILE STACKS!",
+    ["Bilerush"] = "Bilerush",
+    
 })
 
 mod:RegisterDefaultSetting("MarkSpawnLocations")
@@ -46,7 +52,10 @@ mod:RegisterDefaultSetting("DrawSawbladeSafeLines")
 mod:RegisterDefaultSetting("DrawLargeSawLines")
 mod:RegisterDefaultSetting("PrintSwabbieSpeed")
 mod:RegisterDefaultSetting("SoundLashInterrupt")
-mod:RegisterDefaultSetting("SoundDeathwailInterrupt")
+mod:RegisterDefaultSetting("SoundMinibossInterrupt")
+mod:RegisterDefaultSetting("DrawScrubberBubbleCircles")
+mod:RegisterDefaultSetting("Announce10BileStacks", false)
+mod:RegisterDefaultSetting("SoundOozeStacksWarning")
 
 --Wave 1 A: Risen Redmoon Grunt x1, Risen Redmoon Cadet x2, Putrid Pouncer x1
 --Wave 1 B: Risen Redmoon Grunt x2, Risen Redmoon Cadet x2, Risen Redmoon Plunderer x1
@@ -73,7 +82,7 @@ mod:RegisterDefaultSetting("SoundDeathwailInterrupt")
 local DEBUFF__SCRUBBER_BUBBLES = 77715 --Debuff while launched into the air
 local DEBUFF__NECROTIC_OOZE = 84317 --Disorient
 local DEBUFF__JUNK_TRAP = 86752 --Tether debuff
-local DEBUFF__OOZING_BILE = 84321 --Increased damage taken, stacks. Applied by billious brute
+local DEBUFF__OOZING_BILE = 84321 --5% less damage done, 5% increase damage taken. Get stacks by hitting billious brute
 local BUFF__DETERMINED_STRIDE = 85567 --Swabbie is immune to CC (during walk back)
 local BUFF__RISEN_REPELLENT = 85488 --Swabbie will cast AoE knockback if he gets too close to risen
 local BUFF__RISEN = 77841 --Add can't die (needs knocked up into shredder)
@@ -107,6 +116,7 @@ local bWave1Warning, bWave2Warning, bWave3Warning, bMini1Warning, bWave4Warning,
 local bWalkingPhase, bWipeWarning
 local tPositionCheckTimer
 local nSwabbieSkiLiId
+local bShouted10Stacks
 
 local lastPos, speedCheckTimer
 
@@ -139,6 +149,8 @@ function mod:OnBossEnable()
     
     bWalkingPhase = false
     bWipeWarning = false
+    
+    bShouted10Stacks = false
     
     tPositionCheckTimer = ApolloTimer.Create(.2, true, "OnPositionCheckTimer", mod)
     if mod:GetSetting("PrintSwabbieSpeed") then
@@ -174,7 +186,8 @@ function mod:SpeedCheckTimer()
         if not bWalkingPhase then
             local speed = (currentPos - lastPos):Length() / SPEED_CHECK_TIME
             if speed > .1 and speed < 10 then
-                core:Print(string.format("Swabbie Speed: %.2f", speed))
+                --ChatSystemLib.Command("/p " .. string.format(self.L["Swabbie Speed: %.2f"], speed))
+                core:Print(string.format(self.L["Swabbie Speed: %.2f"], speed))
             end
         end
     end
@@ -187,13 +200,14 @@ function mod:OnCastStart(nId, sCastName, nCastEndTime, sName)
             local uUnit = GameLib.GetUnitById(nId)
             local player = GameLib.GetPlayerUnit()
             local playerPos = Vector3.New(player:GetPosition())
-            if mod:DistanceBetween(uUnit, playerPos) < 20 then
+            if mod:DistanceBetween(uUnit, playerPos) < 30 then
                 mod:AddMsg("LASH", "Interrupt Lash!", 5, mod:GetSetting("SoundLashInterrupt") and "Destruction")
             end
         end
     elseif self.L["Regor the Rancid"] == sName then
-        if self.L["Deathwail"] == sCastName then
-            mod:AddMsg("DEATHWAIL", "Interrupt Deathwail!", 5, mod:GetSetting("SoundDeathwailInterrupt") and "Destruction")
+        if self.L["Deathwail"] == sCastName or
+            self.L["Gravedigger"] == sCastName then
+            mod:AddMsg("MINIINTERRUPT", "Interrupt!", 5, mod:GetSetting("SoundMinibossInterrupt") and "Destruction")
         end
     end
 end
@@ -280,12 +294,18 @@ function mod:OnUnitCreated(nId, unit, sName)
         if mod:GetSetting("DrawLargeSawLines") then
             core:AddPixie(nId, 2, unit, nil, "xkcdBrightPurple", 15, 60, 0)
         end
+    elseif sName == self.L["Circle Telegraph"] then
+        if mod:GetSetting("DrawScrubberBubbleCircles") then
+            core:AddPolygon(nId, nId, 6.7, 0, 7, "xkcdBloodOrange", 20)
+        end
     end
 end
 
 function mod:OnUnitDestroyed(nId, unit, sName)
     if sName == self.L["Sawblade"] then
         core:DropPixie(nId)
+    elseif sName == self.L["Circle Telegraph"] then
+        core:RemovePolygon(nId)
     end
 end
 
@@ -311,9 +331,26 @@ function mod:OnBuffAdd(nId, nSpellId, nStack, fTimeRemaining)
     end
 end
 
-function mod:OnBuffRemove(nId, nSpellId, nStack, fTimeRemaining)    
+function mod:OnBuffUpdate(nId, nSpellId, nStack, fTimeRemaining)    
     if BUFF__DETERMINED_STRIDE == nSpellId then
-        bWalkingPhase = false
+        bWalkingPhase = true
+    end
+end
+
+function mod:OnBuffRemove(nId, nSpellId, nStack, fTimeRemaining)    
+    if DEBUFF__OOZING_BILE == nSpellId then
+        local tPlayer = GameLib.GetPlayerUnit()
+        local tUnit = GameLib.GetUnitById(nId)
+        if tPlayer == tUnit then
+            if nStack >= 8 then
+                mod:AddMsg("OOZE", string.format(self.L["%d BILE STACKS!"], nStack), 5, nStack == 8 and mod:GetSetting("SoundOozeStacksWarning") and "Beware")
+            end
+        end
+        
+        if nStack == 10 and not bShouted10Stacks and mod:GetSetting("Announce10BileStacks") then
+            ChatSystemLib.Command("/p" .. string.format(self.L["%s 10 BILE STACKS!"], tUnit:GetName()))
+            bShouted10Stacks = true
+        end
     end
 end
 
