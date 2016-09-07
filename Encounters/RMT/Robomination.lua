@@ -30,6 +30,7 @@ mod:RegisterEnglishLocale({
     ["SMASH NEAR YOU"] = "SMASH NEAR YOU",
     ["SMASH ON %s!"] = "SMASH ON %s!",
     ["Midphase soon!"] = "Midphase soon!",
+    ["Next incineration"] = "Next incineration",
 })
 
 mod:RegisterDefaultSetting("LinesFlailingArms", false)
@@ -135,9 +136,11 @@ function mod:OnDatachron(sMessage)
         bInMidPhase = true
         mod:AddMsg("MIDPHASE", "Get to center!", 5, "Info")
         mod:RemoveTimerBar("ARMS")
+        mod:RemoveTimerBar("INCINERATION_LASER_TIMER")
     elseif sMessage == self.L["The Robomination erupts back into the fight!"] then
         bInMidPhase = false
         mod:AddTimerBar("ARMS", "Next arms", 45, nil)
+        mod:AddTimerBar("INCINERATION_LASER_TIMER", "Next incineration", 18, true)
     elseif sMessage:find(self.L["The Robomination tries to incinerate %s"]) then
         mod:AddMsg("INCINERATION", "Incineration!", 5, mod:GetSetting("IncinerationWarningSound") and "Inferno")
     end
