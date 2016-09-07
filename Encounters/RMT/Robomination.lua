@@ -118,7 +118,10 @@ function mod:OnCastStart(nId, sCastName, nCastEndTime, sName)
             mod:AddMsg("BELCH", "Noxious Belch", 5, mod:GetSetting("BelchWarningSound") and "Beware")
             
             --self:AddPolygon("PLAYER_BELCH", GameLib.GetPlayerUnit():GetPosition(), 8, 0, 3, "xkcdBrightPurple", 16)
+        elseif self.L["Incineration Laser"] == sCastName then
+            core:AddPolygon("INCINERATION LASER", nId, 11.2, 0, 4, "xkcdBrightPurple", 16)
         end
+        
     elseif self.L["Cannon Arm"] == sName then
         if self.L["Cannon Fire"] == sCastName then
             mod:AddMsg("CANNONBLAST", "Interrupt!", 2, mod:GetSetting("CannonArmInterruptSound") and "Alert")
