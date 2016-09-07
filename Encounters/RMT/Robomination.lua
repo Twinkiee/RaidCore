@@ -119,7 +119,8 @@ function mod:OnCastStart(nId, sCastName, nCastEndTime, sName)
             
             --self:AddPolygon("PLAYER_BELCH", GameLib.GetPlayerUnit():GetPosition(), 8, 0, 3, "xkcdBrightPurple", 16)
         elseif self.L["Incineration Laser"] == sCastName then
-            core:AddPolygon("INCINERATION LASER", nId, 11.2, 0, 4, "xkcdBrightPurple", 16)
+            core:AddPolygon("INCINERATION_LASER", nId, 11.2, 0, 4, "xkcdBrightPurple", 16)
+            self:ScheduleTimer(core:RemovePolygon("INCINERATION_LASER"), 12)
         end
         
     elseif self.L["Cannon Arm"] == sName then
