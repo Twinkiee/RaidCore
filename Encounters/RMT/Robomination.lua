@@ -154,6 +154,7 @@ function mod:OnUnitCreated(nId, unit, sName)
     elseif sName == self.L["Cannon Arm"] then
         core:AddUnit(unit)
         core:WatchUnit(unit)
+        core:Print("Cannon Arm location: " .. table.concat(unit:GetPosition(), ", "))
         if mod:GetSetting("LinesCannonArms") then
             core:AddLineBetweenUnits(nId, player:GetId(), nId, 5, "red")
         end
@@ -164,6 +165,7 @@ function mod:OnUnitCreated(nId, unit, sName)
         core:AddUnit(unit)
         core:WatchUnit(unit)
         core:AddPixie(unit:GetId(), 2, unit, nil, "Blue", 10, 22, 0)
+        core:Print("Flailing Arm location: " .. table.concat(unit:GetPosition(), ", "))
         if mod:GetSetting("LinesFlailingArms") then
             core:AddLineBetweenUnits(nId, player:GetId(), nId, 5, "blue")
         end
