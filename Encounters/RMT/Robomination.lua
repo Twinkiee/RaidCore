@@ -146,6 +146,7 @@ function mod:OnUnitCreated(nId, unit, sName)
     if sName == self.L["Robomination"] then
         core:AddUnit(unit)
         core:WatchUnit(unit)
+        core:AddPixie(unit:GetId(), 2, unit, nil, "Green", 10, 22, 0)
     elseif sName == self.L["Cannon Arm"] then
         core:AddUnit(unit)
         core:WatchUnit(unit)
@@ -158,6 +159,7 @@ function mod:OnUnitCreated(nId, unit, sName)
     elseif sName == self.L["Flailing Arm"] then
         core:AddUnit(unit)
         core:WatchUnit(unit)
+        core:AddPixie(unit:GetId(), 2, unit, nil, "Blue", 10, 22, 0)
         if mod:GetSetting("LinesFlailingArms") then
             core:AddLineBetweenUnits(nId, player:GetId(), nId, 5, "blue")
         end
