@@ -34,7 +34,7 @@ mod:RegisterEnglishLocale({
 })
 
 mod:RegisterDefaultSetting("LinesFlailingArms", false)
-mod:RegisterDefaultSetting("LinesCannonArms")
+mod:RegisterDefaultSetting("LinesCannonArms", true)
 mod:RegisterDefaultSetting("LinesScanningEye")
 mod:RegisterDefaultSetting("MarkSmashTarget")
 mod:RegisterDefaultSetting("MarkIncineratedPlayer")
@@ -54,10 +54,10 @@ local DEBUFF__MELTED_ARMOR = 83814 --Has stacks, 65% extra damage from laser per
 local DEBUFF__TRACTOR_BEAM = 75623 --Yoink!
 local DEBUFF__DISCHARGE = 84304 --Something the eye casts during mid phase maybe?
 local ARMS_POSITIONS = {
-    ["NORTH_EST"] = { x = -19.75, y = -1349.87, z = 0.0 },
-    ["NORTH_WEST"] = { x = 10.95, y = -1349.87, z = 0.0 },
-    ["SOUTH_EAST"] = { x = 10.95, y = -1319.42, z = 0.0 },
-    ["SOUTH_WEST"] = { x = -19.75, y = -1319.42, z = 0.0 },
+    ["NORTH_EAST"] = { x = -19.74, y = -203.42, z = -1349.86 },
+    ["NORTH_WEST"] = { x = 10.95, y = -203.42, z = -1349.86 },
+    ["SOUTH_EAST"] = { x = -19.74, y = -203.42, z = -1319.41 },
+    ["SOUTH_WEST"] = { x = 10.95, y = -203.42, z = -1319.41 },
 }
 
 ----------------------------------------------------------------------------------------------------
@@ -66,6 +66,8 @@ local ARMS_POSITIONS = {
 local bMidPhase1Warning, bMidPhase2Warning
 
 local bInMidPhase
+
+local tBossPosition
 
 ----------------------------------------------------------------------------------------------------
 -- Encounter description.
@@ -120,14 +122,19 @@ function mod:OnDebuffRemove(nId, nSpellId)
 end
 
 function mod:OnCastStart(nId, sCastName, nCastEndTime, sName)
+
+    core:AddPolygon("INCINERATION_LASER", tBossPosition, 17, 0, 4, "Red", 15)
+
     if self.L["Robomination"] == sName then
         if self.L["Noxious Belch"] == sCastName then
             mod:AddMsg("BELCH", "Noxious Belch", 5, mod:GetSetting("BelchWarningSound") and "Beware")
             
             --self:AddPolygon("PLAYER_BELCH", GameLib.GetPlayerUnit():GetPosition(), 8, 0, 3, "xkcdBrightPurple", 16)
         elseif self.L["Incineration Laser"] == sCastName then
-            core:AddPolygon("INCINERATION_LASER", nId, 30, 0, 4, "xkcdBrightPurple", 16)
-            self:ScheduleTimer(core:RemovePolygon("INCINERATION_LASER"), 12)
+            local tUnit = GameLib.GetUnitById(nId)
+            core:Print("TEST!!!" .. tUnit:GetName())
+            core:AddPolygon("INCINERATION_LASER", tBossPosition, 17, 0, 4, "Red", 15)
+            -- self:ScheduleTimer(core:RemovePolygon("INCINERATION_LASER"), 12)
         end
         
     elseif self.L["Cannon Arm"] == sName then
@@ -147,28 +154,40 @@ function mod:OnDatachron(sMessage)
         bInMidPhase = false
         mod:AddTimerBar("ARMS", "Next arms", 45, nil)
         mod:AddTimerBar("INCINERATION_LASER_TIMER", "Next incineration", 18, true)
+
     elseif sMessage:find(self.L["The Robomination tries to incinerate %s"]) then
         mod:AddMsg("INCINERATION", "Incineration!", 5, mod:GetSetting("IncinerationWarningSound") and "Inferno")
+
+        core:AddPolygon("INCINERATION_LASER", tBossPosition, 25, 0, 4, "Blue", 16)
+        self:ScheduleTimer(core:RemovePolygon("INCINERATION_LASER"), 12)
     end
 end
 
 -- Test
 function mod:OnUnitCreated(nId, unit, sName)
     local player = GameLib.GetPlayerUnit()
-    
+
+    if (unit and unit:GetPosition()) then
+        Print( sName .. ": " .. table.tostring( unit:GetPosition() ))
+    end
+
     if sName == self.L["Robomination"] then
+        tBossPosition = unit:GetPosition()
         core:AddUnit(unit)
         core:WatchUnit(unit)
         core:AddPixie(unit:GetId(), 2, unit, nil, "Green", 10, 22, 0)
-        core:AddPolygon("ROBOMINATION_HITBOX", nId, 20, 0, 4, "White", 15)
-        core:SetWorldMarker("NORTH_WEST_ARM", self.L["MARKER North-West"], ARMS_POSITIONS["NORTH_WEST"])
-        core:SetWorldMarker("NORTH_EAST_ARM", self.L["MARKER North-East"], ARMS_POSITIONS["NORTH_EAST"])
-        core:SetWorldMarker("SOUTH_EAST_ARM", self.L["MARKER South-East"], ARMS_POSITIONS["SOUTH_EAST"])
-        core:SetWorldMarker("SOUTH_WEST_ARM", self.L["MARKER South-West"], ARMS_POSITIONS["SOUTH_WEST"])
+        core:AddPolygon("ROBOMINATION_HITBOX", nId, 17, 0, 4, "White", 15)
+        -- core:AddPolygon("INCINERATION_LASER", nId, 23, 0, 4, "Red", 16)
+        Print( "Boss: " .. table.tostring(unit:GetPosition()))
+        core:SetWorldMarker("NORTH_WEST_ARM", self.L["1"], ARMS_POSITIONS["NORTH_WEST"])
+        core:SetWorldMarker("NORTH_EAST_ARM", self.L["2"], ARMS_POSITIONS["NORTH_EAST"])
+        core:SetWorldMarker("SOUTH_EAST_ARM", self.L["3"], ARMS_POSITIONS["SOUTH_EAST"])
+        core:SetWorldMarker("SOUTH_WEST_ARM", self.L["4"], ARMS_POSITIONS["SOUTH_WEST"])
     elseif sName == self.L["Cannon Arm"] then
         core:AddUnit(unit)
         core:WatchUnit(unit)
-        core:Print("Cannon Arm location: x: " .. unit:GetPosition().x .. "; y: " .. unit:GetPosition().y "; z: " .. unit:GetPosition().z)
+
+        Print( "Cannon: " .. table.tostring(unit:GetPosition() ))
         if mod:GetSetting("LinesCannonArms") then
             core:AddLineBetweenUnits(nId, player:GetId(), nId, 5, "red")
         end
@@ -179,7 +198,7 @@ function mod:OnUnitCreated(nId, unit, sName)
         core:AddUnit(unit)
         core:WatchUnit(unit)
         core:AddPixie(unit:GetId(), 2, unit, nil, "Blue", 10, 22, 0)
-        core:Print("Flail Arm location: x: " .. unit:GetPosition().x .. "; y: " .. unit:GetPosition().y "; z: " .. unit:GetPosition().z)
+        Print( "Flail: " .. table.tostring(unit:GetPosition() ))
         if mod:GetSetting("LinesFlailingArms") then
             core:AddLineBetweenUnits(nId, player:GetId(), nId, 5, "blue")
         end
@@ -201,4 +220,41 @@ function mod:OnUnitDestroyed(nId, unit, sName)
     elseif sName == self.L["Flailing Arm"] then
         core:RemoveLineBetweenUnits(nId)
     end
+end
+
+
+function table.val_to_str ( v )
+    if "string" == type( v ) then
+        v = string.gsub( v, "\n", "\\n" )
+        if string.match( string.gsub(v,"[^'\"]",""), '^"+$' ) then
+            return "'" .. v .. "'"
+        end
+        return '"' .. string.gsub(v,'"', '\\"' ) .. '"'
+    else
+        return "table" == type( v ) and table.tostring( v ) or
+            tostring( v )
+    end
+end
+
+function table.key_to_str ( k )
+    if "string" == type( k ) and string.match( k, "^[_%a][_%a%d]*$" ) then
+        return k
+    else
+        return "[" .. table.val_to_str( k ) .. "]"
+    end
+end
+
+function table.tostring( tbl )
+    local result, done = {}, {}
+    for k, v in ipairs( tbl ) do
+        table.insert( result, table.val_to_str( v ) )
+        done[ k ] = true
+    end
+    for k, v in pairs( tbl ) do
+        if not done[ k ] then
+            table.insert( result,
+                table.key_to_str( k ) .. "=" .. table.val_to_str( v ) )
+        end
+    end
+    return "{" .. table.concat( result, "," ) .. "}"
 end
