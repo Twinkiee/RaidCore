@@ -53,6 +53,12 @@ local DEBUFF__INCINERATION_LASER = 75496 --Laser target, rooted till someone els
 local DEBUFF__MELTED_ARMOR = 83814 --Has stacks, 65% extra damage from laser per stack
 local DEBUFF__TRACTOR_BEAM = 75623 --Yoink!
 local DEBUFF__DISCHARGE = 84304 --Something the eye casts during mid phase maybe?
+local ARMS_POSITIONS = {
+    ["NORTH_EST"] = { x = -19.75, y = -1349.87, z = 0.0 },
+    ["NORTH_WEST"] = { x = 10.95, y = -1349.87, z = 0.0 },
+    ["SOUTH_EAST"] = { x = 10.95, y = -1319.42, z = 0.0 },
+    ["SOUTH_WEST"] = { x = -19.75, y = -1319.42, z = 0.0 },
+}
 
 ----------------------------------------------------------------------------------------------------
 -- Locals.
@@ -154,6 +160,10 @@ function mod:OnUnitCreated(nId, unit, sName)
         core:AddUnit(unit)
         core:WatchUnit(unit)
         core:AddPixie(unit:GetId(), 2, unit, nil, "Green", 10, 22, 0)
+        core:SetWorldMarker("NORTH_WEST_ARM", self.L["MARKER North-West"], ARMS_POSITIONS["NORTH_WEST"])
+        core:SetWorldMarker("NORTH_EAST_ARM", self.L["MARKER North-East"], ARMS_POSITIONS["NORTH_EAST"])
+        core:SetWorldMarker("SOUTH_EAST_ARM", self.L["MARKER South-East"], ARMS_POSITIONS["SOUTH_EAST"])
+        core:SetWorldMarker("SOUTH_WEST_ARM", self.L["MARKER South-West"], ARMS_POSITIONS["SOUTH_WEST"])
     elseif sName == self.L["Cannon Arm"] then
         core:AddUnit(unit)
         core:WatchUnit(unit)
