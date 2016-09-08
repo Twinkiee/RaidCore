@@ -126,7 +126,7 @@ function mod:OnCastStart(nId, sCastName, nCastEndTime, sName)
             
             --self:AddPolygon("PLAYER_BELCH", GameLib.GetPlayerUnit():GetPosition(), 8, 0, 3, "xkcdBrightPurple", 16)
         elseif self.L["Incineration Laser"] == sCastName then
-            core:AddPolygon("INCINERATION_LASER", nId, 11.2, 0, 4, "xkcdBrightPurple", 16)
+            core:AddPolygon("INCINERATION_LASER", nId, 30, 0, 4, "xkcdBrightPurple", 16)
             self:ScheduleTimer(core:RemovePolygon("INCINERATION_LASER"), 12)
         end
         
@@ -160,6 +160,7 @@ function mod:OnUnitCreated(nId, unit, sName)
         core:AddUnit(unit)
         core:WatchUnit(unit)
         core:AddPixie(unit:GetId(), 2, unit, nil, "Green", 10, 22, 0)
+        core:AddPolygon("ROBOMINATION_HITBOX", nId, 25, 0, 4, "White", 15)
         core:SetWorldMarker("NORTH_WEST_ARM", self.L["MARKER North-West"], ARMS_POSITIONS["NORTH_WEST"])
         core:SetWorldMarker("NORTH_EAST_ARM", self.L["MARKER North-East"], ARMS_POSITIONS["NORTH_EAST"])
         core:SetWorldMarker("SOUTH_EAST_ARM", self.L["MARKER South-East"], ARMS_POSITIONS["SOUTH_EAST"])
