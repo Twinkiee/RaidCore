@@ -160,7 +160,7 @@ function mod:OnUnitCreated(nId, unit, sName)
         core:AddUnit(unit)
         core:WatchUnit(unit)
         core:AddPixie(unit:GetId(), 2, unit, nil, "Green", 10, 22, 0)
-        core:AddPolygon("ROBOMINATION_HITBOX", nId, 25, 0, 4, "White", 15)
+        core:AddPolygon("ROBOMINATION_HITBOX", nId, 20, 0, 4, "White", 15)
         core:SetWorldMarker("NORTH_WEST_ARM", self.L["MARKER North-West"], ARMS_POSITIONS["NORTH_WEST"])
         core:SetWorldMarker("NORTH_EAST_ARM", self.L["MARKER North-East"], ARMS_POSITIONS["NORTH_EAST"])
         core:SetWorldMarker("SOUTH_EAST_ARM", self.L["MARKER South-East"], ARMS_POSITIONS["SOUTH_EAST"])
@@ -168,7 +168,7 @@ function mod:OnUnitCreated(nId, unit, sName)
     elseif sName == self.L["Cannon Arm"] then
         core:AddUnit(unit)
         core:WatchUnit(unit)
-        core:Print("Cannon Arm location: " .. table.concat(unit:GetPosition(), ", "))
+        core:Print("Cannon Arm location: x: " .. unit:GetPosition().x .. "; y: " .. unit:GetPosition().y "; z: " .. unit:GetPosition().z)
         if mod:GetSetting("LinesCannonArms") then
             core:AddLineBetweenUnits(nId, player:GetId(), nId, 5, "red")
         end
@@ -179,7 +179,7 @@ function mod:OnUnitCreated(nId, unit, sName)
         core:AddUnit(unit)
         core:WatchUnit(unit)
         core:AddPixie(unit:GetId(), 2, unit, nil, "Blue", 10, 22, 0)
-        core:Print("Flailing Arm location: " .. table.concat(unit:GetPosition(), ", "))
+        core:Print("Flail Arm location: x: " .. unit:GetPosition().x .. "; y: " .. unit:GetPosition().y "; z: " .. unit:GetPosition().z)
         if mod:GetSetting("LinesFlailingArms") then
             core:AddLineBetweenUnits(nId, player:GetId(), nId, 5, "blue")
         end
