@@ -157,7 +157,7 @@ function mod:OnDatachron(sMessage)
 
     elseif sMessage:find(self.L["The Robomination tries to incinerate %s"]) then
         mod:AddMsg("INCINERATION", "Incineration!", 5, mod:GetSetting("IncinerationWarningSound") and "Inferno")
-
+        mod:AddTimerBar("INCINERATION_LASER_TIMER", "Next incineration", 40, true)
         core:AddPolygon("INCINERATION_LASER", tBossPosition, 25, 0, 4, "Blue", 16)
         self:ScheduleTimer(core:RemovePolygon("INCINERATION_LASER"), 12)
     end
