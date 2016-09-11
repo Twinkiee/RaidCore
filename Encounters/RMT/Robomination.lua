@@ -178,7 +178,7 @@ function mod:OnUnitCreated(nId, unit, sName)
         core:AddPixie(unit:GetId(), 2, unit, nil, "Green", 10, 22, 0)
         core:AddPolygon("ROBOMINATION_HITBOX", nId, 17, 0, 4, "White", 15)
         -- core:AddPolygon("INCINERATION_LASER", nId, 23, 0, 4, "Red", 16)
-        Print( "Boss: " .. table.tostring(unit:GetPosition()))
+        -- Print( "Boss: " .. table.tostring(unit:GetPosition()))
         core:SetWorldMarker("NORTH_WEST_ARM", self.L["1"], ARMS_POSITIONS["NORTH_WEST"])
         core:SetWorldMarker("NORTH_EAST_ARM", self.L["2"], ARMS_POSITIONS["NORTH_EAST"])
         core:SetWorldMarker("SOUTH_EAST_ARM", self.L["3"], ARMS_POSITIONS["SOUTH_EAST"])
@@ -187,7 +187,7 @@ function mod:OnUnitCreated(nId, unit, sName)
         core:AddUnit(unit)
         core:WatchUnit(unit)
 
-        Print( "Cannon: " .. table.tostring(unit:GetPosition() ))
+        -- Print( "Cannon: " .. table.tostring(unit:GetPosition() ))
         if mod:GetSetting("LinesCannonArms") then
             core:AddLineBetweenUnits(nId, player:GetId(), nId, 5, "red")
         end
@@ -198,7 +198,7 @@ function mod:OnUnitCreated(nId, unit, sName)
         core:AddUnit(unit)
         core:WatchUnit(unit)
         core:AddPixie(unit:GetId(), 2, unit, nil, "Blue", 10, 22, 0)
-        Print( "Flail: " .. table.tostring(unit:GetPosition() ))
+        -- Print( "Flail: " .. table.tostring(unit:GetPosition() ))
         if mod:GetSetting("LinesFlailingArms") then
             core:AddLineBetweenUnits(nId, player:GetId(), nId, 5, "blue")
         end
