@@ -123,8 +123,6 @@ end
 
 function mod:OnCastStart(nId, sCastName, nCastEndTime, sName)
 
-    core:AddPolygon("INCINERATION_LASER", tBossPosition, 17, 0, 4, "Red", 15)
-
     if self.L["Robomination"] == sName then
         if self.L["Noxious Belch"] == sCastName then
             mod:AddMsg("BELCH", "Noxious Belch", 5, mod:GetSetting("BelchWarningSound") and "Beware")
@@ -133,7 +131,7 @@ function mod:OnCastStart(nId, sCastName, nCastEndTime, sName)
         elseif self.L["Incineration Laser"] == sCastName then
             local tUnit = GameLib.GetUnitById(nId)
             core:Print("TEST!!!" .. tUnit:GetName())
-            core:AddPolygon("INCINERATION_LASER", tBossPosition, 17, 0, 4, "Red", 15)
+            core:AddPolygon("INCINERATION_LASER", tBossPosition, 25, 0, 4, "Red", 15)
             -- self:ScheduleTimer(core:RemovePolygon("INCINERATION_LASER"), 12)
         end
         
@@ -159,7 +157,9 @@ function mod:OnDatachron(sMessage)
         mod:AddMsg("INCINERATION", "Incineration!", 5, mod:GetSetting("IncinerationWarningSound") and "Inferno")
         mod:AddTimerBar("INCINERATION_LASER_TIMER", "Next incineration", 40, true)
         core:AddPolygon("INCINERATION_LASER", tBossPosition, 25, 0, 4, "Blue", 16)
-        self:ScheduleTimer(core:RemovePolygon("INCINERATION_LASER"), 12)
+        self:ScheduleTimer(function()
+            core:RemovePolygon("INCINERATION_LASER")
+        end, 12)
     end
 end
 
@@ -167,9 +167,9 @@ end
 function mod:OnUnitCreated(nId, unit, sName)
     local player = GameLib.GetPlayerUnit()
 
-    if (unit and unit:GetPosition()) then
-        Print( sName .. ": " .. table.tostring( unit:GetPosition() ))
-    end
+    -- if (unit and unit:GetPosition()) then
+    --     Print( sName .. ": " .. table.tostring( unit:GetPosition() ))
+    -- end
 
     if sName == self.L["Robomination"] then
         tBossPosition = unit:GetPosition()
