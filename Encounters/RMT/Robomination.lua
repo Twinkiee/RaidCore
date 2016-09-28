@@ -68,6 +68,7 @@ local bMidPhase1Warning, bMidPhase2Warning
 local bInMidPhase
 
 local tBossPosition
+local nBossId
 
 ----------------------------------------------------------------------------------------------------
 -- Encounter description.
@@ -98,7 +99,7 @@ function mod:OnDebuffAdd(nId, nSpellId, nStack, fTimeRemaining)
         if tUnit == player then
             mod:AddMsg("SMASH", "SMASH ON YOU!", 5, mod:GetSetting("SmashWarningSound") and "RunAway")
         elseif mod:GetDistanceBetweenUnits(player, tUnit) < 10 then
-            mod:AddMsg("SMASH", self.L["SMASH NEAR YOU"]:format(sName), 5, mod:GetSetting("SmashWarningSound") and "Info")
+            mod:AddMsg("SMASH", self.L["SMASH NEAR YOU"]:format(), 5, mod:GetSetting("SmashWarningSound") and "Info")
         else
             local sName = tUnit:GetName()
             mod:AddMsg("SMASH", self.L["SMASH ON %s!"]:format(sName), 5, mod:GetSetting("SmashWarningSound") and "Info")
@@ -130,8 +131,8 @@ function mod:OnCastStart(nId, sCastName, nCastEndTime, sName)
             --self:AddPolygon("PLAYER_BELCH", GameLib.GetPlayerUnit():GetPosition(), 8, 0, 3, "xkcdBrightPurple", 16)
         elseif self.L["Incineration Laser"] == sCastName then
             local tUnit = GameLib.GetUnitById(nId)
-            core:Print("TEST!!!" .. tUnit:GetName())
-            core:AddPolygon("INCINERATION_LASER", tBossPosition, 25, 0, 4, "Red", 15)
+
+            -- core:AddPolygon("INCINERATION_LASER", tBossPosition, 25, 0, 4, "Red", 15)
             -- self:ScheduleTimer(core:RemovePolygon("INCINERATION_LASER"), 12)
         end
         
@@ -148,14 +149,16 @@ function mod:OnDatachron(sMessage)
         mod:AddMsg("MIDPHASE", "Get to center!", 5, "Info")
         mod:RemoveTimerBar("ARMS")
         mod:RemoveTimerBar("INCINERATION_LASER_TIMER")
+        core:RemovePolygon("ROBOMINATION_HITBOX")
     elseif sMessage == self.L["The Robomination erupts back into the fight!"] then
         bInMidPhase = false
         mod:AddTimerBar("ARMS", "Next arms", 45, nil)
         mod:AddTimerBar("INCINERATION_LASER_TIMER", "Next incineration", 18, true)
+        core:AddPolygon("ROBOMINATION_HITBOX", nBossId, 17, 0, 4, "White", 15)
 
     elseif sMessage:find(self.L["The Robomination tries to incinerate %s"]) then
         mod:AddMsg("INCINERATION", "Incineration!", 5, mod:GetSetting("IncinerationWarningSound") and "Inferno")
-        mod:AddTimerBar("INCINERATION_LASER_TIMER", "Next incineration", 40, true)
+        mod:AddTimerBar("INCINERATION_LASER_TIMER", "Next incineration", 42, true)
         core:AddPolygon("INCINERATION_LASER", tBossPosition, 25, 0, 4, "Blue", 16)
         self:ScheduleTimer(function()
             core:RemovePolygon("INCINERATION_LASER")
@@ -173,6 +176,7 @@ function mod:OnUnitCreated(nId, unit, sName)
 
     if sName == self.L["Robomination"] then
         tBossPosition = unit:GetPosition()
+        nBossId = nId
         core:AddUnit(unit)
         core:WatchUnit(unit)
         core:AddPixie(unit:GetId(), 2, unit, nil, "Green", 10, 22, 0)
@@ -205,7 +209,7 @@ function mod:OnUnitCreated(nId, unit, sName)
     elseif sName == self.L["Scanning Eye"] then
         core:AddUnit(unit)
         core:WatchUnit(unit)
-        if mode:GetSetting("LinesScanningEye") then
+        if mod:GetSetting("LinesScanningEye") then
             core:AddLineBetweenUnits(nId, player:GetId(), nId, 5, "green")
         end
     end
